@@ -1,0 +1,294 @@
+#include <iostream>
+using namespace std;
+
+class Course {
+public:
+    string title, id;
+    int cr_hrs;
+
+    Course() {}
+    Course(string t, string i, int c) : title(t), id(i), cr_hrs(c) {}
+    Course(const Course& other) : title(other.title), id(other.id), cr_hrs(other.cr_hrs) {}
+    ~Course() {}
+
+    friend ostream& operator<<(ostream& os, const Course& c) {
+        os << "Course Title: " << c.title << ", ID: " << c.id << ", Credit Hours: " << c.cr_hrs << endl;
+        return os;
+    }
+};
+
+class Date {
+public:
+    int day, month, year;
+    Date() {}
+    Date(int d, int m, int y) {
+        if (d > 0 && d <= 31 && m > 0 && m <= 12 && y > 0 && y <= 2025) {
+            day = d; month = m; year = y;
+        } else {
+            day = month = year = 0;
+        }
+    }
+    Date(const Date& other) : day(other.day), month(other.month), year(other.year) {}
+    ~Date() {}
+
+    friend ostream& operator<<(ostream& os, const Date& dt) {
+        os << dt.day << "/" << dt.month << "/" << dt.year;
+        return os;
+    }
+};
+
+class Address {
+public:
+    string city, country;
+    Address() {}
+    Address(string c, string co) : city(c), country(co) {}
+    Address(const Address& other) : city(other.city), country(other.country) {}
+    ~Address() {}
+
+    friend ostream& operator<<(ostream& os, const Address& a) {
+        os << a.city << ", " << a.country;
+        return os;
+    }
+};
+
+class Name {
+public:
+    string first_name, last_name;
+    Name() {}
+    Name(string fn, string ln) : first_name(fn), last_name(ln) {}
+    Name(const Name& other) : first_name(other.first_name), last_name(other.last_name) {}
+    ~Name() {}
+
+    friend ostream& operator<<(ostream& os, const Name& n) {
+        os << n.first_name << " " << n.last_name;
+        return os;
+    }
+};
+
+class Person {
+protected:
+    Date dob;
+    Address addr;
+    Name name;
+    char gender;
+
+public:
+    Person() {}
+    Person(Date d, Address a, Name n, char g) : dob(d), addr(a), name(n), gender(g) {}
+    Person(const Person& p) : dob(p.dob), addr(p.addr), name(p.name), gender(p.gender) {}
+    ~Person() {}
+
+    friend ostream& operator<<(ostream& os, const Person& p) {
+        os << "Name: " << p.name << "\nDOB: " << p.dob << "\nAddress: " << p.addr << "\nGender: " << p.gender << endl;
+        return os;
+    }
+};
+
+class History {
+    int course_ct;
+    Course* courses;
+    float experience;
+
+public:
+    History() : course_ct(0), courses(nullptr), experience(0) {}
+    History(Course c[], int ct, float e) : course_ct(ct), experience(e) {
+        courses = new Course[ct];
+        for (int i = 0; i < ct; i++)
+            courses[i] = c[i];
+    }
+    History(const History& other) : course_ct(other.course_ct), experience(other.experience) {
+        courses = new Course[course_ct];
+        for (int i = 0; i < course_ct; i++)
+            courses[i] = other.courses[i];
+    }
+    ~History() { delete[] courses; }
+
+    friend ostream& operator<<(ostream& os, const History& h) {
+        os << "Courses in History:\n";
+        for (int i = 0; i < h.course_ct; i++)
+            os << h.courses[i];
+        os << "Experience: " << h.experience << " years\n";
+        return os;
+    }
+};
+
+class Student : public Person {
+    string roll_no;
+    float cgpa;
+    Course* enrolled_courses;
+    int enrolled_ct;
+
+public:
+    Student() : enrolled_courses(nullptr), enrolled_ct(0) {}
+    Student(Date d, Address a, Name n, char g, string rn, float c) : Person(d, a, n, g), roll_no(rn), cgpa(c), enrolled_ct(0), enrolled_courses(nullptr) {}
+
+    void enroll(Course c) {
+        Course* temp = new Course[enrolled_ct + 1];
+        for (int i = 0; i < enrolled_ct; i++) temp[i] = enrolled_courses[i];
+        temp[enrolled_ct++] = c;
+        delete[] enrolled_courses;
+        enrolled_courses = temp;
+    }
+
+    void drop(string course_id) {
+        int index = -1;
+        for (int i = 0; i < enrolled_ct; i++)
+            if (enrolled_courses[i].id == course_id) { index = i; break; }
+
+        if (index != -1) {
+            Course* temp = new Course[enrolled_ct - 1];
+            for (int i = 0, j = 0; i < enrolled_ct; i++) {
+                if (i != index) temp[j++] = enrolled_courses[i];
+            }
+            enrolled_ct--;
+            delete[] enrolled_courses;
+            enrolled_courses = temp;
+        }
+    }
+
+    ~Student() { delete[] enrolled_courses; }
+
+    friend ostream& operator<<(ostream& os, const Student& s) {
+        os << (Person&)s << "Roll No: " << s.roll_no << "\nCGPA: " << s.cgpa << endl;
+        os << "Enrolled Courses:\n";
+        for (int i = 0; i < s.enrolled_ct; i++) os << s.enrolled_courses[i];
+        return os;
+    }
+};
+
+class Teacher : public Person {
+    History history;
+    float salary;
+    Course* courses;
+    int course_ct;
+
+public:
+    Teacher() : courses(nullptr), course_ct(0), salary(0) {}
+    Teacher(Date d, Address a, Name n, char g, History h, float sal, Course* c, int ct)
+        : Person(d, a, n, g), history(h), salary(sal), course_ct(ct) {
+        courses = new Course[course_ct];
+        for (int i = 0; i < course_ct; i++) courses[i] = c[i];
+    }
+    Teacher(const Teacher& other) : Person(other), history(other.history), salary(other.salary), course_ct(other.course_ct) {
+        courses = new Course[course_ct];
+        for (int i = 0; i < course_ct; i++) courses[i] = other.courses[i];
+    }
+    ~Teacher() { delete[] courses; }
+
+    friend ostream& operator<<(ostream& os, const Teacher& t) {
+        os << (Person&)t << "\nSalary: " << t.salary << "\n" << t.history;
+        os << "Courses taught:\n";
+        for (int i = 0; i < t.course_ct; i++) os << t.courses[i];
+        return os;
+    }
+};
+
+// Extra: Transcript, Discussion, Messaging Classes
+class Transcript {
+    float sgpa;
+    int cr_hrs;
+    Course* courses;
+    char* grades;
+    int course_ct;
+
+public:
+    Transcript() : sgpa(0), cr_hrs(0), course_ct(0), courses(nullptr), grades(nullptr) {}
+    Transcript(Course* c, char* g, int ct, float s) : sgpa(s), course_ct(ct) {
+        courses = new Course[ct];
+        grades = new char[ct];
+        for (int i = 0; i < ct; i++) {
+            courses[i] = c[i];
+            grades[i] = g[i];
+            cr_hrs += c[i].cr_hrs;
+        }
+    }
+    ~Transcript() { delete[] courses; delete[] grades; }
+
+    friend ostream& operator<<(ostream& os, const Transcript& t) {
+        os << "Transcript:\n";
+        for (int i = 0; i < t.course_ct; i++) {
+            os << t.courses[i] << "Grade: " << t.grades[i] << endl;
+        }
+        os << "SGPA: " << t.sgpa << ", Credit Hours: " << t.cr_hrs << endl;
+        return os;
+    }
+};
+
+class DiscussionPost {
+    string content;
+    string author;
+
+public:
+    DiscussionPost(string a, string c) : author(a), content(c) {}
+    void reply(string r) {
+        cout << "Reply to [" << content << "]: " << r << endl;
+    }
+};
+
+class Message {
+    string sender;
+    string receiver;
+    string text;
+
+public:
+    Message(string s, string r, string t) : sender(s), receiver(r), text(t) {}
+    void display() {
+        cout << "From: " << sender << " To: " << receiver << "\nMessage: " << text << "\n";
+    }
+};
+
+int main() {
+    cout << "Date class check:\n";
+    Date d(5, 10, 2000);
+    cout << d << "\n\n";
+
+    cout << "Address class check:\n";
+    Address a("Lahore", "Pakistan");
+    cout << a << "\n\n";
+
+    cout << "Name class check:\n";
+    Name n("Sara", "Ahmad");
+    cout << n << "\n\n";
+
+    cout << "Course class check:\n";
+    Course c1("OOP", "M101", 4);
+    Course c2("PF", "P202", 4);
+    Course cArr[] = {c1, c2};
+    for (int i = 0; i < 2; i++) cout << cArr[i];
+    cout << "\n";
+
+    cout << "Person class check:\n";
+    Person p(d, a, n, 'F');
+    cout << p << "\n";
+
+    cout << "History class check:\n";
+    History h(cArr, 2, 5.5);
+    cout << h << "\n";
+
+    cout << "Student class check:\n";
+    Student s(d, a, n, 'M', "S123", 3.75);
+    s.enroll(c1);
+    s.enroll(c2);
+    s.drop("M101");
+    cout << s << "\n";
+
+    cout << "Teacher class check:\n";
+    Teacher t(d, a, n, 'F', h, 80000.0, cArr, 2);
+    cout << t << "\n";
+
+    cout << "Transcript class check:\n";
+    char grades[] = {'A', 'B'};
+    Transcript tr(cArr, grades, 2, 3.5);
+    cout << tr << "\n";
+
+    cout << "Message class check:\n";
+    Message m("Teacher1", "Student1", "Please submit your assignment.");
+    m.display();
+
+    cout << "DiscussionPost class check:\n";
+    DiscussionPost dp("Student2", "Can anyone explain Question 5?");
+    dp.reply("Sure, I'll help you.");
+    
+
+}
+
